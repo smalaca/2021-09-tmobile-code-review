@@ -44,7 +44,7 @@ public class ToDoItemProcessor {
                 break;
 
             case IN_PROGRESS:
-                process(toDoItem);
+                processInProgress(toDoItem);
                 break;
 
             case DONE:
@@ -93,7 +93,7 @@ public class ToDoItemProcessor {
         }
     }
 
-    private void process(ToDoItem toDoItem) {
+    private void processInProgress(ToDoItem toDoItem) {
         if (toDoItem instanceof Task) {
             Task task = (Task) toDoItem;
             storyService.updateProgressOf(task.getStory(), task);
