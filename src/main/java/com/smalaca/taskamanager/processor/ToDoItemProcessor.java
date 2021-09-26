@@ -103,7 +103,13 @@ public class ToDoItemProcessor {
     private void processDone(ToDoItem toDoItem) {
         if (toDoItem instanceof Task) {
             Task task = (Task) toDoItem;
+            Story story = task.getStory();
             storyService.updateProgressOf(task.getStory(), task);
+            if (DONE.equals(story.getStatus())) {
+                StoryDoneEvent event = new StoryDoneEvent();
+                event.setStoryId(story.getId());
+                eventsRegistry.publish(event);
+            }
         } else if (toDoItem instanceof Story) {
             Story story = (Story) toDoItem;
             StoryDoneEvent event = new StoryDoneEvent();
