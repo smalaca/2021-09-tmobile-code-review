@@ -3,6 +3,7 @@ package com.smalaca.taskamanager.processor;
 import com.smalaca.taskamanager.events.EpicReadyToPrioritize;
 import com.smalaca.taskamanager.events.StoryApprovedEvent;
 import com.smalaca.taskamanager.events.StoryDoneEvent;
+import com.smalaca.taskamanager.events.TaskApprovedEvent;
 import com.smalaca.taskamanager.events.ToDoItemReleasedEvent;
 import com.smalaca.taskamanager.exception.UnsupportedToDoItemType;
 import com.smalaca.taskamanager.model.entities.Epic;
@@ -15,6 +16,8 @@ import com.smalaca.taskamanager.service.ProjectBacklogService;
 import com.smalaca.taskamanager.service.SprintBacklogService;
 import com.smalaca.taskamanager.service.StoryService;
 import org.springframework.stereotype.Component;
+
+import static com.smalaca.taskamanager.model.enums.ToDoItemStatus.DONE;
 
 @Component
 public class ToDoItemProcessor {
@@ -61,26 +64,28 @@ public class ToDoItemProcessor {
         }
     }
 
-    private void processDefined(ToDoItem tdi) {
-        if (tdi instanceof Story) {
-            Story s = (Story) tdi;
-            if (s.getTasks().isEmpty()) {
-                projectBacklogService.moveToReadyForDevelopment(s, s.getProject());
+    private void processDefined(ToDoItem toDoItem) {
+        if (toDoItem instanceof Story) {
+            Story story = (Story) toDoItem;
+            if (story.getTasks().isEmpty()) {
+                projectBacklogService.moveToReadyForDevelopment(story, story.getProject());
             } else {
-                // ToDo there should be code here
+                if (!story.isAssigned()) {
+                    communicationService.notifyTeamsAbout(story, story.getProject());
+                }
             }
         } else {
-            if (tdi instanceof Task) {
-                Task t = (Task) tdi;
-                sprintBacklogService.moveToReadyForDevelopment(t, t.getCurrentSprint());
+            if (toDoItem instanceof Task) {
+                Task task = (Task) toDoItem;
+                sprintBacklogService.moveToReadyForDevelopment(task, task.getCurrentSprint());
             } else {
-                if (tdi instanceof Epic) {
-                    Epic epic = (Epic) tdi;
+                if (toDoItem instanceof Epic) {
+                    Epic epic = (Epic) toDoItem;
                     projectBacklogService.putOnTop(epic);
                     EpicReadyToPrioritize event = new EpicReadyToPrioritize();
                     event.setEpicId(epic.getId());
                     eventsRegistry.publish(event);
-                    communicationService.notify(tdi, tdi.getProject().getProductOwner());
+                    communicationService.notify(toDoItem, toDoItem.getProject().getProductOwner());
                 } else {
                     throw new UnsupportedToDoItemType();
                 }
