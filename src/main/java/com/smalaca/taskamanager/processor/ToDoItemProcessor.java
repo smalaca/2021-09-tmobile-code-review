@@ -94,8 +94,10 @@ public class ToDoItemProcessor {
     }
 
     private void process(ToDoItem toDoItem) {
-        Task task = (Task) toDoItem;
-        storyService.updateProgressOf(task.getStory(), task);
+        if (toDoItem instanceof Task) {
+            Task task = (Task) toDoItem;
+            storyService.updateProgressOf(task.getStory(), task);
+        }
     }
 
     private void processDone(ToDoItem toDoItem) {
