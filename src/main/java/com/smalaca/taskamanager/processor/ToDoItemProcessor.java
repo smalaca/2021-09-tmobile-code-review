@@ -127,7 +127,13 @@ public class ToDoItemProcessor {
         } else if (toDoItem instanceof Task) {
             Task task = (Task) toDoItem;
 
-            storyService.attachPartialApprovalFor(task.getStory().getId(), task.getId());
+            if (task.isSubtask()) {
+                TaskApprovedEvent event = new TaskApprovedEvent();
+                event.setTaskId(task.getId());
+                eventsRegistry.publish(event);
+            } else {
+                storyService.attachPartialApprovalFor(task.getStory().getId(), task.getId());
+            }
         }
     }
 
